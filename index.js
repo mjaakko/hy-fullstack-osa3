@@ -1,4 +1,6 @@
-require('dotenv').config()
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config()
+}
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
@@ -12,18 +14,6 @@ morgan.token('body', req => req ? JSON.stringify(req.body) : "")
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
 app.use(express.static('frontend'))
-
-const errorHandler = (error, request, response, next) => {
-    console.error(error.message)
-  
-    if (error.name === 'CastError' && error.kind == 'ObjectId') {
-      return response.status(400).send({ error: 'invalid id' })
-    } 
-  
-    next(error)
-}
-
-app.use(errorHandler)
   
 app.get('/info', (req, res, next) => {
   Person.find({}).then(persons => {
@@ -34,7 +24,7 @@ app.get('/info', (req, res, next) => {
 app.get('/api/persons', (req, res, next) => {
   Person.find({}).then(persons => {
     res.json(persons.map(person => person.toJSON()))
-  }).catch(next => next(error))
+  }).catch(error => next(error))
 })
 
 app.get('/api/persons/:id', (req, res, next) => {
@@ -76,24 +66,30 @@ app.post('/api/persons', (req, res, next) => {
         })
     }
 
-    Person.find({name: body.name}).then(persons => {
-        if (persons.length > 0) {
-            res.status(400).json({
-                error: 'name must be unique'
-            })
-        } else {
-            const person = new Person({
-                id: random(1000000),
-                name: body.name,
-                number: body.number
-            })
+    const person = new Person({
+        id: random(1000000),
+        name: body.name,
+        number: body.number
+    })
 
-            return person.save().then(savedPerson => {
-                res.json(person.toJSON())
-            })
-        }
-    }).then(error => next(error))
+    return person.save().then(savedPerson => {
+        res.json(person.toJSON())
+    }).catch(error => next(error))
 })
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+  
+    if (error.name === 'CastError' && error.kind == 'ObjectId') {
+      return response.status(400).send({ error: 'invalid id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
+    }
+  
+    next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
