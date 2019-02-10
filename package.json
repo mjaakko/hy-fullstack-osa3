@@ -4,11 +4,13 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "watch": "nodemon index.js"
+    "watch": "nodemon index.js",
+    "lint": "eslint ."
   },
   "author": "Jaakko Malkki <jaakko.malkki@helsinki.fi>",
   "license": "MIT",
   "devDependencies": {
+    "eslint": "^5.13.0",
     "nodemon": "^1.18.10"
   },
   "dependencies": {
