@@ -2,6 +2,9 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
+const cors = require('cors')
+
+app.use(cors())
 
 morgan.token('body', req => req ? JSON.stringify(req.body) : "")
 
@@ -73,7 +76,7 @@ app.post('/api/persons', (req, res) => {
 
     persons = persons.concat(person)
 
-    res.json(persons)
+    res.json(person)
 })
 
 const PORT = process.env.PORT || 3001
